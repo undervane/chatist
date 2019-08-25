@@ -1,0 +1,17 @@
+
+version: '3.7'
+services:
+  mysql_db:
+    container_name: mysql_db
+    image: mysql:5.6
+    volumes:
+      - chat_db:/var/lib/mysql
+    ports:
+      - "3360:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root #Enter here your password
+
+volumes:
+  chat_db:
+    external: true
+    name: chat_db
