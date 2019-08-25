@@ -9,7 +9,7 @@ import * as path from 'path';
 @Module({
   imports: [
     ChatModule,
-    ConfigModule.load(path.resolve(__dirname, '../config', '**', '!(*.d).{ts,js}')),
+    ConfigModule.load(path.resolve(__dirname, 'config', '**', '!(*.d).{ts,js}')),
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => config.get('database'),
       inject: [ConfigService],

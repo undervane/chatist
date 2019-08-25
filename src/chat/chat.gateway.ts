@@ -4,7 +4,7 @@ import { Client } from './entity/client.entity';
 import { Repository } from 'typeorm';
 import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { TelegramService } from 'src/telegram/telegram.service';
+import { TelegramService } from '../telegram/telegram.service';
 import { first } from 'rxjs/operators';
 import { isNullOrUndefined } from 'util';
 import { ConfigService } from 'nestjs-config';
