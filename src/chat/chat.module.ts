@@ -1,18 +1,14 @@
-import { Message } from './entity/message.entity';
 import { ChatGateway } from './chat.gateway';
 import { TelegramModule } from '../telegram/telegram.module';
-import { Client } from './entity/client.entity';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { BrokerService } from './broker/broker.service';
+import { ChatRepository } from './chat.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Client, Message]),
-    TelegramModule,
+    forwardRef(() => TelegramModule),
   ],
-  providers: [ChatService, ChatGateway, BrokerService],
-  exports: [ChatService, ChatGateway],
+  providers: [ChatService, ChatGateway, ChatRepository],
+  exports: [ChatService],
 })
 export class ChatModule { }

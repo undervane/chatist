@@ -1,4 +1,5 @@
-import { Injectable, HttpService } from '@nestjs/common';
+import { Injectable, HttpService, Inject, forwardRef } from '@nestjs/common';
+import { ChatService } from '../chat/chat.service';
 
 const BASE_PATH = 'https://api.telegram.org';
 
@@ -7,6 +8,7 @@ export class TelegramService {
 
   constructor(
     private readonly http: HttpService,
+    @Inject(forwardRef(() => ChatService)) private readonly chatService: ChatService,
   ) { }
 
   sendMessage(destination: { token: string, chatId: string }, text: string) {
@@ -14,6 +16,10 @@ export class TelegramService {
       BASE_PATH + '/' + destination.token + '/sendMessage',
       { params: { chat_id: destination.chatId, text } },
     );
+  }
+
+  update(body: unknown) {
+    this.chatService.onTelegramMessage(body);
   }
 
 }

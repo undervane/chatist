@@ -1,34 +1,140 @@
-import { Message } from './entity/message.entity';
 import { ChatGateway } from './chat.gateway';
-import { Client } from './entity/client.entity';
-import { Injectable, HttpException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
+import { ChatRepository } from './chat.repository';
+import { ConfigService } from 'nestjs-config';
+import { isNullOrUndefined } from 'util';
+import { Socket } from 'socket.io';
+import { TelegramService } from '../telegram/telegram.service';
+import { first } from 'rxjs/operators';
 
 @Injectable()
 export class ChatService {
 
+  destination = this.configService.get('telegram');
+
   constructor(
-    @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>,
-    private readonly chatGateway: ChatGateway,
+    private readonly configService: ConfigService,
+    private readonly chatRepository: ChatRepository,
+    @Inject(forwardRef(() => ChatGateway)) private readonly chatGateway: ChatGateway,
+    @Inject(forwardRef(() => TelegramService)) private readonly telegramService: TelegramService,
   ) { }
 
-  async update(update: any) {
+  onClientConnect(socket: Socket) {
+    const name = socket.handshake.query.name;
 
-    this.chatGateway.sendMessage('response', update);
+    if (isNullOrUndefined(name)) {
+      socket.disconnect();
+      return;
+    }
 
-    if (update && update.message.reply_to_message) {
+    try {
+      this.telegramService
+        .sendMessage(this.destination, `New connection: ${name} (${socket.id})`)
+        .pipe(
+          first(),
+        )
+        .subscribe(
+          response => this.chatRepository.addClient(socket.id, response.data.result.message_id, name),
+        );
+    } catch (e) {
+      // Manage exception
+    }
+  }
 
-      const message = await this.messageRepository.findOne(
-        { messageId: update.message.reply_to_message.message_id },
+  async onClientDisconnect(socket: Socket) {
+
+    const client = await this.chatRepository.getClient(socket.id);
+
+    this.chatRepository.deleteMessages(socket.id).then(() => {
+
+      this.telegramService
+        .sendMessage(this.destination, `Disconnect: ${client.name} (${socket.id})`)
+        .pipe(
+          first(),
+        )
+        .subscribe();
+
+    }).catch(e => undefined);
+  }
+
+  async onClientMessage(socket: Socket, message: string) {
+
+    const isCommand = this.parseMessage(socket, message);
+
+    if (isCommand) {
+      return;
+    }
+
+    const client = await this.chatRepository.getClient(socket.id);
+
+    const finalMessage = `${client.name}: ${message}`;
+
+    this.telegramService.sendMessage(this.destination, finalMessage)
+      .pipe(
+        first(),
+      )
+      .subscribe(
+        response => this.chatRepository.addMessage(socket.id, response.data.result.message_id),
       );
 
-      if (message) {
-        this.chatGateway.sendMessage('response', update.message.text, message.socketId);
+  }
+
+  async onTelegramMessage(update: any) {
+
+    if (update && update.message && update.message.reply_to_message) {
+
+      const socketId = await this.chatRepository.getSocketId(
+        update.message.reply_to_message.message_id,
+      );
+
+      if (socketId) {
+        this.chatGateway.sendMessage('response', update.message.text, socketId);
       }
 
     }
+  }
+
+  private sendSmartReply(type: 'text' | 'md', message: string, id?: string) {
+
+    const smartReply = {
+      type,
+      message,
+    };
+
+    id ? this.chatGateway.sendMessage('smartReply', smartReply, id) : this.chatGateway.sendMessage('smartReply', smartReply);
+  }
+
+  private parseMessage(socket: Socket, message: string): boolean {
+    const parsed = message.match(/^\/([^@\s]+)\s?(.*)$/i);
+
+    if (!parsed || !parsed[1]) {
+      return false;
+    }
+
+    const command = parsed[1];
+
+    if (command === 'hello') {
+      this.chatGateway.sendMessage('response', 'Options', socket.id);
+    }
+
+    if (command === 'contact') {
+
+      const markdown = `
+        # Contact
+
+        ## Email
+
+        sergio@mipigu.com
+
+        ## Website
+
+        https://mipigu.com
+      `;
+
+      this.sendSmartReply('md', markdown, socket.id);
+    }
+
+    return true;
   }
 
 }
