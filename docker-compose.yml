@@ -5,13 +5,12 @@ services:
     image: redis
     container_name: cache
     ports:
-      - "6379:6379"
+      - "${HOST_REDIS_PORT}:${REDIS_PORT}"
 
   chat:
     build: .
     restart: always
     ports:
-      - "8080:8080"
-      - "3785:4783"
+      - "${HOST_APP_PORT}:${APP_PORT}"
     environment:
-      WAIT_HOSTS: redis:6379
+      WAIT_HOSTS: redis:${REDIS_PORT}
