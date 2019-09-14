@@ -113,13 +113,13 @@ export class ChatService {
 
     const command = parsed[1];
 
-    if (command === 'hello') {
-      this.chatGateway.sendMessage('response', 'Options', socket.id);
-    }
+    switch (command) {
+      case 'hello':
+        this.chatGateway.sendMessage('response', 'Options', socket.id);
+        return true;
 
-    if (command === 'contact') {
-
-      const markdown = `
+      case 'contact':
+        const markdown = `
         # Contact
 
         ## Email
@@ -129,12 +129,16 @@ export class ChatService {
         ## Website
 
         https://mipigu.com
-      `;
+        `;
 
-      this.sendSmartReply('md', markdown, socket.id);
+        this.sendSmartReply('md', markdown, socket.id);
+        return true;
+
+      default:
+        this.chatGateway.sendMessage('response', `Oh, I don't understand what you mean with command: /${command}`, socket.id);
+        return true;
+
     }
-
-    return true;
   }
 
 }
