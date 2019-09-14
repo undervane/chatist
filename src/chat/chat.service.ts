@@ -118,6 +118,10 @@ export class ChatService {
         this.chatGateway.sendMessage('response', 'Options', socket.id);
         return true;
 
+      case 'close':
+        this.chatGateway.close();
+        return true;
+
       case 'contact':
         const markdown = `
         # Contact

@@ -25,6 +25,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.chatService.onClientMessage(socket, message);
   }
 
+  close(): void {
+    this.server.close();
+  }
+
   sendMessage(channel: string, message: unknown, id?: string) {
     id ? this.server.to(id).emit(channel, message) : this.server.emit(channel, message);
   }
