@@ -59,12 +59,6 @@ export class ChatService {
 
   async onClientMessage(socket: Socket, message: string) {
 
-    const isCommand = this.parseMessage(socket, message);
-
-    if (isCommand) {
-      return;
-    }
-
     const client = await this.chatRepository.getClient(socket.id);
 
     const finalMessage = `${client.name}: ${message}`;
@@ -77,6 +71,47 @@ export class ChatService {
         response => this.chatRepository.addMessage(socket.id, response.data.result.message_id),
       );
 
+  }
+
+  onCommand(socket: Socket, message: string): boolean {
+    const parsed = message.match(/^\/([^@\s]+)\s?(.*)$/i);
+
+    if (!parsed || !parsed[1]) {
+      return;
+    }
+
+    const command = parsed[1];
+
+    switch (command) {
+      case 'hello':
+        this.chatGateway.sendMessage('response', 'Options', socket.id);
+        break;
+
+      case 'close':
+        socket.disconnect();
+        break;
+
+      case 'contact':
+        const markdown = `
+        # Contact
+
+        ## Email
+
+        sergio@mipigu.com
+
+        ## Website
+
+        https://mipigu.com
+        `;
+
+        this.sendSmartReply('md', markdown, socket.id);
+        break;
+
+      default:
+        this.chatGateway.sendMessage('response', `Oh, I don't understand what you mean with command: /${command}`, socket.id);
+        break;
+
+    }
   }
 
   async onTelegramMessage(update: any) {
@@ -102,47 +137,6 @@ export class ChatService {
     };
 
     id ? this.chatGateway.sendMessage('smartReply', smartReply, id) : this.chatGateway.sendMessage('smartReply', smartReply);
-  }
-
-  private parseMessage(socket: Socket, message: string): boolean {
-    const parsed = message.match(/^\/([^@\s]+)\s?(.*)$/i);
-
-    if (!parsed || !parsed[1]) {
-      return false;
-    }
-
-    const command = parsed[1];
-
-    switch (command) {
-      case 'hello':
-        this.chatGateway.sendMessage('response', 'Options', socket.id);
-        return true;
-
-      case 'close':
-        this.chatGateway.close();
-        return true;
-
-      case 'contact':
-        const markdown = `
-        # Contact
-
-        ## Email
-
-        sergio@mipigu.com
-
-        ## Website
-
-        https://mipigu.com
-        `;
-
-        this.sendSmartReply('md', markdown, socket.id);
-        return true;
-
-      default:
-        this.chatGateway.sendMessage('response', `Oh, I don't understand what you mean with command: /${command}`, socket.id);
-        return true;
-
-    }
   }
 
 }

@@ -25,8 +25,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.chatService.onClientMessage(socket, message);
   }
 
-  close(): void {
-    this.server.close();
+  @SubscribeMessage('command')
+  async onCommand(socket: Socket, command: string) {
+    this.chatService.onCommand(socket, command);
   }
 
   sendMessage(channel: string, message: unknown, id?: string) {
