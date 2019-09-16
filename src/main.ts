@@ -8,11 +8,11 @@ async function bootstrap() {
 
   let app: INestApplication;
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.SSL_MODE) {
 
-    const key = fs.readFileSync(path.resolve(__dirname, '../ssl/privkey.pem'));
-    const cert = fs.readFileSync(path.resolve(__dirname, '../ssl/cert.pem'));
-    const ca = fs.readFileSync(path.resolve(__dirname, '../ssl/fullchain.pem'));
+    const key = fs.readFileSync(path.resolve(__dirname, process.env.SSL_KEY_PATH));
+    const cert = fs.readFileSync(path.resolve(__dirname, process.env.SSL_CERT_PATH));
+    const ca = fs.readFileSync(path.resolve(__dirname, process.env.SSL_CA_PATH));
 
     app = await NestFactory.create(AppModule, {
       httpsOptions: {
