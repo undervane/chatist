@@ -1,16 +1,15 @@
-version: '3.7'
+version: '2'
 
 services:
   redis:
     image: redis
-    container_name: cache
     ports:
-      - "${HOST_REDIS_PORT}:${REDIS_PORT}"
+      - "6379:6379"
 
   chat:
     build: .
     restart: always
+    depends_on:
+      - redis
     ports:
-      - "${HOST_APP_PORT}:${APP_PORT}"
-    environment:
-      WAIT_HOSTS: redis:${REDIS_PORT}
+      - "80:8080"
