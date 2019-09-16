@@ -10,10 +10,7 @@ import { first } from 'rxjs/operators';
 @Injectable()
 export class ChatService {
 
-  destination = this.configService.get('telegram');
-
   constructor(
-    private readonly configService: ConfigService,
     private readonly chatRepository: ChatRepository,
     @Inject(forwardRef(() => ChatGateway)) private readonly chatGateway: ChatGateway,
     @Inject(forwardRef(() => TelegramService)) private readonly telegramService: TelegramService,
@@ -29,7 +26,7 @@ export class ChatService {
 
     try {
       this.telegramService
-        .sendMessage(this.destination, `New connection: ${name} (${socket.id})`)
+        .sendMessage(`New connection: ${name} (${socket.id})`)
         .pipe(
           first(),
         )
@@ -48,7 +45,7 @@ export class ChatService {
     this.chatRepository.deleteMessages(socket.id).then(() => {
 
       this.telegramService
-        .sendMessage(this.destination, `Disconnect: ${client.name} (${socket.id})`)
+        .sendMessage(`Disconnect: ${client.name} (${socket.id})`)
         .pipe(
           first(),
         )
@@ -63,7 +60,7 @@ export class ChatService {
 
     const finalMessage = `${client.name}: ${message}`;
 
-    this.telegramService.sendMessage(this.destination, finalMessage)
+    this.telegramService.sendMessage(finalMessage)
       .pipe(
         first(),
       )
