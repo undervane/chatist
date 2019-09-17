@@ -6,9 +6,13 @@ import { isNullOrUndefined } from 'util';
 import { Socket } from 'socket.io';
 import { TelegramService } from '../telegram/telegram.service';
 import { first } from 'rxjs/operators';
+import { Message } from 'node-telegram-bot-api';
+import { DNDMode } from './modes/dnd.mode';
 
 @Injectable()
 export class ChatService {
+
+  dndMode = new DNDMode();
 
   constructor(
     private readonly chatRepository: ChatRepository,
@@ -16,11 +20,18 @@ export class ChatService {
     @Inject(forwardRef(() => TelegramService)) private readonly telegramService: TelegramService,
   ) { }
 
-  onClientConnect(socket: Socket) {
+  async onClientConnect(socket: Socket) {
     const name = socket.handshake.query.name;
+    const ip = socket.handshake.headers['x-forwarded-for'];
 
-    if (isNullOrUndefined(name)) {
+    if (isNullOrUndefined(name) || await this.isBannedIp(ip)) {
       socket.disconnect();
+      return;
+    }
+
+    if (this.dndMode.check()) {
+      // Include away message if any
+      // this.chatGateway.sendMessage('response', 'Away');
       return;
     }
 
@@ -31,7 +42,7 @@ export class ChatService {
           first(),
         )
         .subscribe(
-          response => this.chatRepository.addClient(socket.id, response.data.result.message_id, name),
+          response => this.chatRepository.addClient(socket.id, response.data.result.message_id, name, ip),
         );
     } catch (e) {
       // Manage exception
@@ -39,6 +50,10 @@ export class ChatService {
   }
 
   async onClientDisconnect(socket: Socket) {
+
+    if (this.dndMode.check()) {
+      return;
+    }
 
     const client = await this.chatRepository.getClient(socket.id);
 
@@ -56,7 +71,18 @@ export class ChatService {
 
   async onClientMessage(socket: Socket, message: string) {
 
+    if (this.dndMode.check()) {
+      // Include away message, if any
+      // this.chatGateway.sendMessage('response', 'Away');
+      return;
+    }
+
     const client = await this.chatRepository.getClient(socket.id);
+
+    if (await this.isBannedIp(client.ip)) {
+      socket.disconnect();
+      return;
+    }
 
     const finalMessage = `${client.name}: ${message}`;
 
@@ -111,19 +137,43 @@ export class ChatService {
     }
   }
 
-  async onTelegramMessage(update: any) {
+  async onTelegramMessage(message: Message) {
 
-    if (update && update.message && update.message.reply_to_message) {
+    const socketId = await this.chatRepository.getSocketId(
+      message.reply_to_message.message_id.toString(),
+    );
 
-      const socketId = await this.chatRepository.getSocketId(
-        update.message.reply_to_message.message_id,
-      );
-
-      if (socketId) {
-        this.chatGateway.sendMessage('response', update.message.text, socketId);
-      }
-
+    if (socketId) {
+      this.chatGateway.sendMessage('response', message.text, socketId);
     }
+  }
+
+  setupDndMode(activated: boolean, startHour: number, endHour: number) {
+    this.dndMode = new DNDMode(activated, startHour, endHour);
+    return this.dndMode;
+  }
+
+  getBannedIPs(): Promise<string[]> {
+    return this.chatRepository.getBannedIPs();
+  }
+
+  async addBannedClient(clientId: string): Promise<void> {
+    const client = await this.chatRepository.getClient(clientId);
+
+    if (!client) {
+      throw new Error('No client found');
+    }
+
+    this.chatRepository.addBanIP(client.ip);
+  }
+
+  async removeBannedIp(ip: string): Promise<void> {
+    this.chatRepository.removeBanIP(ip);
+  }
+
+  async isBannedIp(ip: string): Promise<boolean> {
+    const banned = await this.chatRepository.getBannedIPs();
+    return banned.includes(ip);
   }
 
   private sendSmartReply(type: 'text' | 'md', message: string, id?: string) {

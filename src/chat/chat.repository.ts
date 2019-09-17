@@ -27,7 +27,7 @@ export class ChatRepository implements OnModuleInit {
     return client ? JSON.parse(client) : null;
   }
 
-  async addClient(clientId: string, messageId: string, name: string): Promise<boolean> {
+  async addClient(clientId: string, messageId: string, name: string, ip: string): Promise<boolean> {
 
     let client = await this.getClient(clientId);
 
@@ -35,7 +35,7 @@ export class ChatRepository implements OnModuleInit {
       return false;
     }
 
-    client = { name, messages: [] } as ClientModel;
+    client = { name, messages: [], ip } as ClientModel;
 
     this.client.set(clientId, JSON.stringify(client));
     return this.addMessage(clientId, messageId);
@@ -70,6 +70,31 @@ export class ChatRepository implements OnModuleInit {
     await this.client.del(clientId);
 
     return true;
+
+  }
+
+  async addBanIP(ip: string) {
+
+    const banned = await this.getBannedIPs();
+
+    banned.push(ip);
+
+    this.client.set('banned', JSON.stringify(banned));
+  }
+
+  async removeBanIP(ipToUnban: string) {
+
+    let banned = await this.getBannedIPs();
+
+    banned = banned.filter(ip => ip !== ipToUnban);
+
+    this.client.set('banned', JSON.stringify(banned));
+  }
+
+  async getBannedIPs(): Promise<string[]> {
+    const banned = await this.client.get('banned');
+
+    return banned ? JSON.parse(banned) : [];
 
   }
 
