@@ -103,11 +103,11 @@ We'll get started then with the Balena deployment.
 
 1. Login to your Balena account and add a new application. You can set the name you want and select your device (this project works on all Balena supported devices).
 
-![balena-deployment-1](docs/resources/img/deployment-1.png)
+![balena-deployment-1](docs/resources/img/balena-deployment-1.png)
 
 2. Now add a new device to your newly created application, you can leave default options although you need some kind of customization, then click download.
 
-![balena-deployment-2](docs/resources/img/deployment-2.png)
+![balena-deployment-2](docs/resources/img/balena-deployment-2.png)
 
 3. Once finished downloading, get your SD card, we'll use Etcher to burn the image on it. You can download Etcher here: https://www.balena.io/etcher/
 
@@ -119,7 +119,7 @@ We'll get started then with the Balena deployment.
 
 5. Your device should appear in your application dashboard as soon as it starts up (starting from a few seconds to a few minutes depending on the speed of your SD card).
 
-![balena-deployment-3](docs/resources/img/deployment-3.png)
+![balena-deployment-3](docs/resources/img/balena-deployment-3.png)
 
 6. While we wait for previous step, we can setup the application environment variables, so recover your bot token and chat id from previous step because we'll need it now.
 
@@ -127,11 +127,11 @@ You need to add two environment variables: `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CH
 
 > Copy as is, it's case sensitive.
 
-![balena-deployment-4](docs/resources/img/deployment-4.png)
+![balena-deployment-4](docs/resources/img/balena-deployment-4.png)
 
 7. When device is already in the application dashboard, get into it and activate the public device url. Copy the url, we'll need to add another environment variable.
 
-![balena-deployment-5](docs/resources/img/deployment-5.png)
+![balena-deployment-5](docs/resources/img/balena-deployment-5.png)
 
 8. Go back to the application environment variables and add a new variable called `TELEGRAM_BOT_WEBHOOK` with the previous copied device url as the value, but adding `/telegram/webhook` to the end. 
 
@@ -161,7 +161,7 @@ balena push your-application-name
 
 If everything goes fine, you should see something like below:
 
-![balena-deployment-6](docs/resources/img/deployment-6.png)
+![balena-deployment-6](docs/resources/img/balena-deployment-6.png)
 
 4. Now go back to your device dashboard and see the magic happening in realtime.
 
@@ -169,7 +169,7 @@ Congratulations! 🎉
 
 You now have your own Chatist distribution completely deployed.
 
-![balena-deployment-7](docs/resources/img/deployment-7.png)
+![balena-deployment-7](docs/resources/img/balena-deployment-7.png)
 
 You can use Firecamp (from here: https://firecamp.app/) to simulte a client for your Chatist distribution.
 
