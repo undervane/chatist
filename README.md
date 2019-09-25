@@ -75,7 +75,7 @@ Let's start with the Telegram integration by creating our own bot and bootstrap 
 
 We have now finished with the Telegram setup and we can start setting up the integration with Chatist. Keep your bot token and chat id near you because we'll use them shortly.
 
-### Setup your project for deployment
+### Setup your project for deployment
 
 1. Clone the project to your computer
 
@@ -97,7 +97,7 @@ You should consider that if you choose the manual deployment you'll need to prov
 
 We'll get started then with the Balena deployment.
 
-### Deployment with Balena (Device Configuration)
+### Deployment with Balena (Device Configuration)
 
 0. Before starting make sure you have an account in Balena, if not create one here: https://dashboard.balena-cloud.com/signup
 
