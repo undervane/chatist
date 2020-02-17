@@ -15,11 +15,11 @@ async function bootstrap() {
 
   const appConfig = configService.get('app');
 
-  if (appConfig.sslMode == 'true') {
+  if (appConfig.sslMode === '1') {
 
-    const key = fs.readFileSync(path.resolve(__dirname, appConfig.sslKeyPath));
-    const cert = fs.readFileSync(path.resolve(__dirname, appConfig.sslCertPath));
-    const ca = fs.readFileSync(path.resolve(__dirname, appConfig.sslCaPath));
+    const key = fs.readFileSync(path.resolve(appConfig.sslKeyPath));
+    const cert = fs.readFileSync(path.resolve(appConfig.sslCertPath));
+    const ca = fs.readFileSync(path.resolve(appConfig.sslCaPath));
 
     app = await NestFactory.create(AppModule, {
       httpsOptions: {
