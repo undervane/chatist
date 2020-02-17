@@ -3,16 +3,23 @@ import { AppModule } from './app.module';
 import { INestApplication } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
+import { ConfigService } from 'nestjs-config';
 
 async function bootstrap() {
 
   let app: INestApplication;
 
-  if (process.env.SSL_MODE) {
+  app = await NestFactory.create(AppModule);
 
-    const key = fs.readFileSync(path.resolve(__dirname, process.env.SSL_KEY_PATH));
-    const cert = fs.readFileSync(path.resolve(__dirname, process.env.SSL_CERT_PATH));
-    const ca = fs.readFileSync(path.resolve(__dirname, process.env.SSL_CA_PATH));
+  const configService = app.get(ConfigService);
+
+  const appConfig = configService.get('app');
+
+  if (appConfig.sslMode == 'true') {
+
+    const key = fs.readFileSync(path.resolve(__dirname, appConfig.sslKeyPath));
+    const cert = fs.readFileSync(path.resolve(__dirname, appConfig.sslCertPath));
+    const ca = fs.readFileSync(path.resolve(__dirname, appConfig.sslCaPath));
 
     app = await NestFactory.create(AppModule, {
       httpsOptions: {
@@ -21,11 +28,9 @@ async function bootstrap() {
         ca,
       },
     });
-  } else {
-    app = await NestFactory.create(AppModule);
   }
 
   app.enableCors();
-  await app.listen(process.env.APP_PORT || 8080, process.env.APP_HOST || '0.0.0.0');
+  await app.listen(appConfig.port || 8080, appConfig.host || '0.0.0.0');
 }
 bootstrap();
