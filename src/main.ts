@@ -31,6 +31,6 @@ async function bootstrap() {
   }
 
   app.enableCors();
-  await app.listen(appConfig.port || 8080, appConfig.host || '0.0.0.0');
+  await app.listen(appConfig.port || 8080);
 }
 bootstrap();
