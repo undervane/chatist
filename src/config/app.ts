@@ -1,6 +1,6 @@
 export default {
-  host: process.env.APP_HOST,
-  port: process.env.APP_PORT,
+  host: process.env.HOST,
+  port: process.env.PORT,
   wssPort: process.env.WSS_PORT,
   sslMode: process.env.SSL_MODE,
   sslKeyPath: process.env.SSL_KEY_PATH,
